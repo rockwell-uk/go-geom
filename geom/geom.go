@@ -3,7 +3,7 @@ package geom
 import (
 	"fmt"
 
-	geos "github.com/rockwell-uk/go-geos"
+	geos "github.com/twpayne/go-geos"
 )
 
 var gctx = geos.NewContext()
@@ -23,7 +23,7 @@ func GetGeometryCenter(g *geos.Geom, scale func(x, y float64) (float64, float64)
 
 	switch g.TypeID() {
 
-	case geos.PointTypeID:
+	case geos.TypeIDPoint:
 
 		x, y := scale(g.X(), g.Y())
 
@@ -32,7 +32,7 @@ func GetGeometryCenter(g *geos.Geom, scale func(x, y float64) (float64, float64)
 			y,
 		}, nil
 
-	case geos.MultiLineStringTypeID, geos.LineStringTypeID:
+	case geos.TypeIDMultiLineString, geos.TypeIDLineString:
 
 		g, err = ScaleLine(g, scale)
 		if err != nil {
@@ -135,10 +135,7 @@ func transformToPoints(r string, g *geos.Geom, multi bool, scale func(x, y float
 		endSep = ")"
 	}
 	r = fmt.Sprintf("%v %v", r, startSep)
-	points, err := g.GetPoints(g)
-	if err != nil {
-		return r, fmt.Errorf("transformToPoints %v", err)
-	}
+	points := GetPoints(g)
 	l := len(*points)
 	for i, p := range *points {
 		x, y := scale(p[0], p[1])
@@ -194,4 +191,41 @@ func BoundsGeom(xmin, xmax, ymin, ymax float64) (*geos.Geom, error) {
 	}
 
 	return g, nil
+}
+
+func GetPoints(list ...*geos.Geom) *[][]float64 {
+	var res [][]float64
+
+	for _, g := range list {
+		_type := g.TypeID()
+
+		switch _type {
+		case geos.TypeIDPoint, geos.TypeIDLineString, geos.TypeIDLinearRing, geos.TypeIDMultiPoint, geos.TypeIDMultiLineString:
+			for i := 0; i < g.NumGeometries(); i++ {
+				res = append(res, g.Geometry(i).CoordSeq().ToCoords()...)
+			}
+		case geos.TypeIDPolygon:
+			l := g.ExteriorRing()
+			for i := 0; i < l.NumGeometries(); i++ {
+				res = append(res, l.Geometry(i).CoordSeq().ToCoords()...)
+			}
+		case geos.TypeIDMultiPolygon:
+			for i := 0; i < g.NumGeometries(); i++ {
+				t := g.Geometry(i)
+				l := t.ExteriorRing()
+				for i := 0; i < l.NumGeometries(); i++ {
+					res = append(res, l.Geometry(i).CoordSeq().ToCoords()...)
+				}
+			}
+		case geos.TypeIDGeometryCollection:
+			var subgeoms []*geos.Geom
+			for i := 0; i < g.NumGeometries(); i++ {
+				subgeoms = append(subgeoms, g.Geometry(i))
+			}
+			s := GetPoints(subgeoms...)
+			res = append(res, *s...)
+		}
+	}
+
+	return &res
 }

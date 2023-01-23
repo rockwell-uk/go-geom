@@ -1,7 +1,7 @@
 package geom
 
 import (
-	geos "github.com/rockwell-uk/go-geos"
+	geos "github.com/twpayne/go-geos"
 )
 
 type Envelope struct {
