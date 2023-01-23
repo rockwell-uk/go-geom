@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/llgcode/draw2d v0.0.0-20210904075650-80aa0a2a901d
-	github.com/rockwell-uk/go-geos v0.0.0-20230120105117-162e1aadd9ec
+	github.com/twpayne/go-geos v0.8.0
 	golang.org/x/image v0.3.0
 )
 

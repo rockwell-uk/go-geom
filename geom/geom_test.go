@@ -92,10 +92,7 @@ func TestScale(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		cs, err := g.GetPoints(g)
-		if err != nil {
-			t.Fatal(err)
-		}
+		cs := GetPoints(g)
 
 		csd := *cs
 		n := len(csd)
