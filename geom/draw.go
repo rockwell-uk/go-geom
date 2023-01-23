@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"math"
 
-	geos "github.com/rockwell-uk/go-geos"
+	geos "github.com/twpayne/go-geos"
 
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dimg"
@@ -65,10 +65,7 @@ func DrawPoint(gc draw2d.GraphicContext, g *geos.Geom, radius float64, fillColor
 
 func DrawLine(gc draw2d.GraphicContext, g *geos.Geom, lineWidth float64, fillColor color.Color, strokeWidth float64, strokeColor color.Color, scale func(x, y float64) (float64, float64)) error {
 
-	cs, err := g.GetPoints(g)
-	if err != nil {
-		return err
-	}
+	cs := GetPoints(g)
 
 	if lineWidth == 0.0 {
 		return errors.New("line width cannot be zero")
@@ -85,10 +82,6 @@ func DrawLine(gc draw2d.GraphicContext, g *geos.Geom, lineWidth float64, fillCol
 	gc.SetStrokeColor(fillColor)
 	gc.SetLineWidth(lineWidth)
 
-	cs, err = g.GetPoints(g)
-	if err != nil {
-		return err
-	}
 	lineCoordSeq(gc, cs, scale)
 	gc.Stroke()
 
@@ -102,11 +95,7 @@ func DrawPolygon(gc draw2d.GraphicContext, g *geos.Geom, fillColor color.Color, 
 	gc.SetLineWidth(strokeWidth)
 
 	// exterior ring
-	e := g.ExteriorRing()
-	cs, err := e.GetPoints(e)
-	if err != nil {
-		return err
-	}
+	cs := GetPoints(g.ExteriorRing())
 
 	lineCoordSeq(gc, cs, scale)
 	gc.FillStroke()
@@ -114,12 +103,7 @@ func DrawPolygon(gc draw2d.GraphicContext, g *geos.Geom, fillColor color.Color, 
 
 	n := g.NumInteriorRings()
 	for i := 0; i < n; i++ {
-		r := g.InteriorRing(i)
-		cs, err := r.GetPoints(r)
-		if err != nil {
-			return err
-		}
-		lineCoordSeq(gc, cs, scale)
+		lineCoordSeq(gc, GetPoints(g.InteriorRing(i)), scale)
 		gc.SetFillColor(color.White)
 		gc.FillStroke()
 	}

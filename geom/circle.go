@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math"
 
-	geos "github.com/rockwell-uk/go-geos"
+	geos "github.com/twpayne/go-geos"
 )
 
 func Circle(origin []float64, radius float64, numPoints int) ([][]float64, error) {
